@@ -244,6 +244,29 @@ class ImageOrVideoDataset(Dataset):
         frames = torch.stack([self.video_transforms(frame) for frame in frames], dim=0)
         return frames
 
+    # def _preprocess_video(self, path: Path) -> torch.Tensor:
+    #     video_reader = decord.VideoReader(uri=path.as_posix())
+    #     video_num_frames = len(video_reader)
+    #     nearest_frame_bucket = min(
+    #         [bucket for bucket in self.resolution_buckets if bucket[0] <= video_num_frames],
+    #         key=lambda x: abs(x[0] - min(video_num_frames, self.max_num_frames)),
+    #         default=1,
+    #     )[0]
+
+    #     original_fps = video_reader.get_avg_fps()
+    #     frame_step = max(1, int(original_fps / desired_fps))  # Step size for 12 FPS
+
+    #     frame_indices = list(range(0, video_num_frames, frame_step))
+
+    #     frames = video_reader.get_batch(frame_indices)
+    #     frames = frames[:nearest_frame_bucket].float()
+    #     frames = frames.permute(0, 3, 1, 2).contiguous()
+
+    #     nearest_res = self._find_nearest_resolution(frames.shape[2], frames.shape[3])
+    #     frames_resized = torch.stack([resize(frame, nearest_res) for frame in frames], dim=0)
+    #     frames = torch.stack([self.video_transforms(frame) for frame in frames_resized], dim=0)
+
+    #     return frames
 
 class ImageOrVideoDatasetWithResizing(ImageOrVideoDataset):
     def __init__(self, *args, **kwargs) -> None:
@@ -266,6 +289,9 @@ class ImageOrVideoDatasetWithResizing(ImageOrVideoDataset):
     def _preprocess_video(self, path: Path) -> torch.Tensor:
         video_reader = decord.VideoReader(uri=path.as_posix())
         video_num_frames = len(video_reader)
+        
+        # print(f"Video num frames: {video_num_frames}, max_num_frames: {self.max_num_frames}")
+
         nearest_frame_bucket = min(
             [bucket for bucket in self.resolution_buckets if bucket[0] <= video_num_frames],
             key=lambda x: abs(x[0] - min(video_num_frames, self.max_num_frames)),
